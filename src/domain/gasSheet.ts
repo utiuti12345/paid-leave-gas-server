@@ -1,4 +1,4 @@
-export default class GasSheet {
+class GasSheet {
     sheet: any; // SheetClass from GAS
     columns: { columnNum: number; name: string }[]
     data: {}[];
@@ -26,3 +26,39 @@ export default class GasSheet {
         this.data = data;
     }
 }
+
+class EmployeeList extends GasSheet{
+    constructor(sheet) {
+        super(sheet)
+    }
+
+    findById(id){
+        let employData;
+        for (var key in this.data) {
+            // @ts-ignore
+            if(this.data[key].id === id){
+                employData = this.data[key];
+            }
+        }
+        return employData;
+    }
+}
+
+class ApproveList extends GasSheet{
+    constructor(sheet) {
+        super(sheet)
+    }
+
+    findById(id){
+        let approveData;
+        for (var key in this.data) {
+            // @ts-ignore
+            if(this.data[key].id === id){
+                approveData = this.data[key];
+            }
+        }
+        return approveData;
+    }
+}
+
+export {GasSheet,EmployeeList,ApproveList};

@@ -1,4 +1,4 @@
-import GasSheet from "./domain/gasSheet";
+import {GasSheet, EmployeeList, ApproveList} from "./domain/gasSheet";
 import {Const} from "./const/const";
 import {PaidLeaveHandler} from "./handler/paidLeaveSheet";
 
@@ -29,7 +29,6 @@ function doGet(e) {
         responseText = JSON.stringify(gasSheet.data);
         //Mime Typeをapplication/jsonに設定
         out.setMimeType(ContentService.MimeType.JSON);
-        console.log("aaaaa");
     }
     //JSONPテキストをセットする
     out.setContent(responseText);
@@ -55,12 +54,18 @@ function doPost(e) {
     const params = JSON.parse(e.postData.getDataAsString());
 
     const SHEETS = SpreadsheetApp.openById(Const.Sheet.SHEET_ID);
-    const employeeList = new GasSheet(SHEETS.getSheetByName(Const.Sheet.EMPLOYEE_LIST));
-    const approveList = new GasSheet(SHEETS.getSheetByName(Const.Sheet.APPROVE_LIST));
+    const employeeList = new EmployeeList(SHEETS.getSheetByName(Const.Sheet.EMPLOYEE_LIST));
+    const approveList = new ApproveList(SHEETS.getSheetByName(Const.Sheet.APPROVE_LIST));
 
-    //const employeeData = employeeList.findWhere({name: params.employeeId});
-    // const approveData = approveList.findWhere({id: params.approveId});
-    //const handler = new PaidLeaveHandler();
+    const employeeData = employeeList.findById(params.employeeId);
+    const approveData = approveList.findById(params.approveId);
+
+    const date = new Date(params.paidLeave[0]);
+    const year = date.getFullYear();
+    const SpreadSheet = SpreadsheetApp.openById(employeeData.spread_id);
+    const PaidLeaveSheet = SpreadSheet.getSheetByName(year.toString());
+    const handler = new PaidLeaveHandler(PaidLeaveSheet);
+    handler.updatePaidTimeSheet(params.paidLeave[0]);
 
     let output = ContentService.createTextOutput();
     output.setMimeType(ContentService.MimeType.JSON);
@@ -68,17 +73,15 @@ function doPost(e) {
     if (params.type === "default") {
         output.setContent(JSON.stringify({
             type: params.type,
-            employeeList: employeeList,
-            employeeData: "",
-            approveList: approveList,
-            approveData: "",
-            paidLeave: params.paidLeave
+            employeeData: employeeData,
+            approveData: approveData,
+            paidLeave: params.paidLeave,
         }));
     } else {
         output.setContent(JSON.stringify({
             type: params.type,
-            employeeData: "",
-            approveData: "",
+            employeeData: employeeData,
+            approveData: approveData,
             startDate: params.startDate,
             endDate: params.endDate
         }));
