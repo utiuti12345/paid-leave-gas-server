@@ -1,6 +1,15 @@
 {
   "timeZone": "Asia/Tokyo",
   "dependencies": {
+    "libraries": [{
+      "userSymbol": "underscoreGS",
+      "libraryId": "1yzaSmLB2aNXtKqIrSZ92SA4D14xPNdZOo3LQRH2Zc6DK6gHRpRK_StrT",
+      "version": "3"
+    }]
+  },
+  "webapp": {
+    "access": "ANYONE_ANONYMOUS",
+    "executeAs": "USER_DEPLOYING"
   },
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8"
