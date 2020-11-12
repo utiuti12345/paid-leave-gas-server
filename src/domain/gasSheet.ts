@@ -34,7 +34,7 @@ class EmployeeList extends GasSheet{
 
     findById(id){
         let employData;
-        for (var key in this.data) {
+        for (let key in this.data) {
             // @ts-ignore
             if(this.data[key].id === id){
                 employData = this.data[key];
@@ -51,7 +51,7 @@ class ApproveList extends GasSheet{
 
     findById(id){
         let approveData;
-        for (var key in this.data) {
+        for (let key in this.data) {
             // @ts-ignore
             if(this.data[key].id === id){
                 approveData = this.data[key];

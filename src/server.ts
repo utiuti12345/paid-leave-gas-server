@@ -1,6 +1,7 @@
 import {GasSheet, EmployeeList, ApproveList} from "./domain/gasSheet";
 import {Const} from "./const/const";
 import {PaidLeaveHandler} from "./handler/paidLeaveSheet";
+import PaidLeaveDate from "./domain/paidLeaveDate";
 
 function doGet(e) {
     let sheetName;
@@ -60,32 +61,36 @@ function doPost(e) {
     const employeeData = employeeList.findById(params.employeeId);
     const approveData = approveList.findById(params.approveId);
 
-    const date = new Date(params.paidLeave[0]);
-    const year = date.getFullYear();
+    const pl = params.paidLeave[0];
+    const paidLeaveDate = new PaidLeaveDate(pl);
+    const year = paidLeaveDate.getYear();
+
     const SpreadSheet = SpreadsheetApp.openById(employeeData.spread_id);
     const PaidLeaveSheet = SpreadSheet.getSheetByName(year.toString());
+
     const handler = new PaidLeaveHandler(PaidLeaveSheet);
-    handler.updatePaidTimeSheet(params.paidLeave[0]);
 
     let output = ContentService.createTextOutput();
     output.setMimeType(ContentService.MimeType.JSON);
 
-    if (params.type === "default") {
-        output.setContent(JSON.stringify({
-            type: params.type,
-            employeeData: employeeData,
-            approveData: approveData,
-            paidLeave: params.paidLeave,
-        }));
-    } else {
-        output.setContent(JSON.stringify({
-            type: params.type,
-            employeeData: employeeData,
-            approveData: approveData,
-            startDate: params.startDate,
-            endDate: params.endDate
-        }));
-    }
+    const paidLeave = [];
+
+    params.paidLeave.map((it) => {
+        if (it !== undefined && it !== null) {
+            const paidLeaveDate = new PaidLeaveDate(it);
+            if (!(paidLeaveDate.isHoliday() || paidLeaveDate.isWeekend())) {
+                handler.updatePaidTimeSheet(paidLeaveDate.getDateString());
+                paidLeave.push(it);
+            }
+        }
+    });
+
+    output.setContent(JSON.stringify({
+        type: params.type,
+        employeeData: employeeData,
+        approveData: approveData,
+        paidLeave: paidLeave,
+    }));
 
     return output;
 }
