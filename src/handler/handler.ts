@@ -1,14 +1,12 @@
-class Handler{
-    paidLeaveHandler:any;
+import {GmailHandler} from "./gmailHandler";
+import {PaidLeaveHandler} from "./paidLeaveHandler";
 
-    constructor(paidLeaveHandler){
+export class Handler {
+    paidLeaveHandler:PaidLeaveHandler;
+    gmailHandler:GmailHandler;
+
+    constructor(paidLeaveHandler,gmailHandler){
         this.paidLeaveHandler = paidLeaveHandler;
+        this.gmailHandler = gmailHandler;
     }
-}
-
-export interface IPaidLeaveHandler{
-    findRow(string,number):number;
-    findColumn(string,number):number;
-
-    updatePaidTimeSheet(any):void;
 }

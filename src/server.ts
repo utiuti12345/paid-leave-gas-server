@@ -1,6 +1,8 @@
 import {GasSheet, EmployeeList, ApproveList} from "./domain/gasSheet";
 import {Const} from "./const/const";
-import {PaidLeaveHandler} from "./handler/paidLeaveSheet";
+import {PaidLeaveHandler} from "./handler/paidLeaveHandler";
+import {GmailHandler} from "./handler/gmailHandler";
+import {Handler} from "./handler/handler";
 import PaidLeaveDate from "./domain/paidLeaveDate";
 
 function doGet(e) {
@@ -61,29 +63,39 @@ function doPost(e) {
     const employeeData = employeeList.findById(params.employeeId);
     const approveData = approveList.findById(params.approveId);
 
-    const pl = params.paidLeave[0];
-    const paidLeaveDate = new PaidLeaveDate(pl);
-    const year = paidLeaveDate.getYear();
+    const year = params.year;
 
-    const SpreadSheet = SpreadsheetApp.openById(employeeData.spread_id);
-    const PaidLeaveSheet = SpreadSheet.getSheetByName(year.toString());
+    const spreadSheet = SpreadsheetApp.openById(employeeData.spread_id);
+    const paidLeaveSheet = spreadSheet.getSheetByName(year);
 
-    const handler = new PaidLeaveHandler(PaidLeaveSheet);
+    const pls = new PaidLeaveHandler(paidLeaveSheet);
+    const g = new GmailHandler();
+    const handler = new Handler(pls,g);
 
     let output = ContentService.createTextOutput();
     output.setMimeType(ContentService.MimeType.JSON);
 
     const paidLeave = [];
 
+    let paidLeaveText = '';
     params.paidLeave.map((it) => {
         if (it !== undefined && it !== null) {
             const paidLeaveDate = new PaidLeaveDate(it);
             if (!(paidLeaveDate.isHoliday() || paidLeaveDate.isWeekend())) {
-                handler.updatePaidTimeSheet(paidLeaveDate.getDateString());
+                handler.paidLeaveHandler.updatePaidTimeSheet(paidLeaveDate.getDateString());
                 paidLeave.push(it);
+
+                paidLeaveText += it + " ";
             }
         }
     });
+
+    // 申請者に送る
+    const balancePaidLeave = handler.paidLeaveHandler.getBalancePaidLeave();
+    const body = handler.gmailHandler.generateEmployeeBodies(employeeData.name,paidLeaveText,balancePaidLeave,employeeData.spread_id);
+    handler.gmailHandler.sendMail(employeeData.mail_address,Const.Gmail.SUBJECT,body.plain,body.html);
+
+    // 承認者に送る
 
     output.setContent(JSON.stringify({
         type: params.type,

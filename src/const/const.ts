@@ -11,4 +11,8 @@ export namespace Const {
         export const EMPLOYEE_LIST = "employee_list";
         export const APPROVE_LIST = "approve_list";
     }
+
+    export namespace Gmail {
+        export const SUBJECT = "有給休暇申請";
+    }
 }

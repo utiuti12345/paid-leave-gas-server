@@ -1,5 +1,12 @@
-import {IPaidLeaveHandler} from './handler';
 import {Const} from "../const/const";
+
+interface IPaidLeaveHandler{
+    findRow(string,number):number;
+    findColumn(string,number):number;
+
+    updatePaidTimeSheet(any):void;
+    getBalancePaidLeave():string;
+}
 
 export class PaidLeaveHandler implements IPaidLeaveHandler{
     sheet: any; // SheetClass from GAS
@@ -34,4 +41,7 @@ export class PaidLeaveHandler implements IPaidLeaveHandler{
         const col = this.findColumn(date.getDate(), 8);
         this.sheet.getRange(row, col).setValue(Const.PaidStatus.DIGE1STION);
     };
+
+    // 有給休暇の残日数取得(6,14で固定)
+    getBalancePaidLeave = () => this.sheet.getRange(6, 14).getValue();
 }
