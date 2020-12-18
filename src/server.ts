@@ -7,7 +7,7 @@ import PaidLeaveDate from "./domain/paidLeaveDate";
 
 function doGet(e) {
     let sheetName;
-    const SHEETS = SpreadsheetApp.openById(Const.Sheet.SHEET_ID);
+    const SHEETS = SpreadsheetApp.openById(Const.Sheet.MST_SHEET_ID);
     let SHEET;
     if (e.parameter == undefined) {
         sheetName = Const.Sheet.EMPLOYEE_LIST;
@@ -56,7 +56,7 @@ function getData(id, sheetName) {
 function doPost(e) {
     const params = JSON.parse(e.postData.getDataAsString());
 
-    const SHEETS = SpreadsheetApp.openById(Const.Sheet.SHEET_ID);
+    const SHEETS = SpreadsheetApp.openById(Const.Sheet.MST_SHEET_ID);
     const employeeList = new EmployeeList(SHEETS.getSheetByName(Const.Sheet.EMPLOYEE_LIST));
     const approveList = new ApproveList(SHEETS.getSheetByName(Const.Sheet.APPROVE_LIST));
 
@@ -68,9 +68,32 @@ function doPost(e) {
     const spreadSheet = SpreadsheetApp.openById(employeeData.spread_id);
     const paidLeaveSheet = spreadSheet.getSheetByName(year);
 
-    const pls = new PaidLeaveHandler(paidLeaveSheet);
+    let pls = new PaidLeaveHandler(spreadSheet,paidLeaveSheet);
     const g = new GmailHandler();
-    const handler = new Handler(pls,g);
+    let handler = new Handler(pls,g);
+
+    if(params.mode = Const.Mode.UPDATE_PAID_LEAVE_SHEET){
+        const balancePaidLeave = handler.paidLeaveHandler.getBalancePaidLeave();
+        const paidLeaveCurrentYear = handler.paidLeaveHandler.getPaidLeaveCurrentYear(employeeData.joining_date);
+
+        const nextYear = params.nextYear;
+        const templateSheet = SpreadsheetApp.openById(Const.Sheet.TEMPLATE_SHEET_ID).getSheetByName(Const.Sheet.FORMAT);
+        const copySheet = handler.paidLeaveHandler.copySheet(templateSheet,nextYear.toString());
+
+        // 新しく作成した有給申請シートを更新するので、再宣言
+        pls = new PaidLeaveHandler(spreadSheet,copySheet);
+        handler = new Handler(pls,g);
+
+        handler.paidLeaveHandler.updateCurrentYearPaidLeaveSheet(balancePaidLeave,paidLeaveCurrentYear,employeeData.name,nextYear);
+        const body = handler.gmailHandler.generateEmployeeBodies(employeeData.name,"なし",balancePaidLeave,employeeData.spread_id);
+        handler.gmailHandler.sendMail(employeeData.mail_address,Const.Gmail.SUBJECT,body.plain,body.html);
+
+        let output = ContentService.createTextOutput();
+        output.setMimeType(ContentService.MimeType.JSON);
+        return output.setContent(JSON.stringify({
+            message: "success"
+        }));
+    }
 
     let output = ContentService.createTextOutput();
     output.setMimeType(ContentService.MimeType.JSON);

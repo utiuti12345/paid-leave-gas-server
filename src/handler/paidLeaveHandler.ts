@@ -1,17 +1,25 @@
 import {Const} from "../const/const";
+import Spreadsheet = GoogleAppsScript.Spreadsheet.Spreadsheet;
+import Sheet = GoogleAppsScript.Spreadsheet.Sheet;
 
 interface IPaidLeaveHandler{
-    findRow(string,number):number;
-    findColumn(string,number):number;
+    findRow(val:string,col:number):number;
+    findColumn(val:string,col:number):number;
 
-    updatePaidTimeSheet(any):void;
+    updatePaidTimeSheet(paidDateTime:any):void;
     getBalancePaidLeave():string;
+    copySheet(destSpreadSheet:any,sheetName:string);
+
+    getPaidLeaveCurrentYear(joiningDate:string):number;
+    updateCurrentYearPaidLeaveSheet(balancePaidLeave:number,paidLeaveCurrentYear:number,employeeName:string,year:string):void;
 }
 
-export class PaidLeaveHandler implements IPaidLeaveHandler{
-    sheet: any; // SheetClass from GAS
+export class PaidLeaveHandler implements IPaidLeaveHandler {
+    spreadSheet:Spreadsheet;
+    sheet: Sheet; // SheetClass from GAS
 
-    constructor(sheet) {
+    constructor(spreadSheet,sheet) {
+        this.spreadSheet = spreadSheet;
         this.sheet = sheet;
     }
 
@@ -44,4 +52,53 @@ export class PaidLeaveHandler implements IPaidLeaveHandler{
 
     // 有給休暇の残日数取得(6,14で固定)
     getBalancePaidLeave = () => this.sheet.getRange(6, 14).getValue();
+
+    // シートをコピーの内容をする
+    copySheet = (destSpreadSheet,sheetName) => {
+        // コピー処理
+        const copySheet = destSpreadSheet.copyTo(this.spreadSheet);
+
+        // リネーム
+        copySheet.setName(sheetName);
+
+        return copySheet;
+    };
+
+    // 勤続年数から今年度付与する日数を取得する
+    getPaidLeaveCurrentYear = (joiningDate) => {
+        let jd = new Date(joiningDate);
+        let now = new Date();
+        let ms = now.getTime() - jd.getTime();
+        let serviceYears = Math.floor(ms / (1000*60*60*24*30.417));
+
+        if(serviceYears > 0 && serviceYears < 6){
+            return 0;
+        }else if(serviceYears > 6 && serviceYears < 18){
+            return 10;
+        }else if(serviceYears > 18 && serviceYears < 30){
+            return 11;
+        }else if(serviceYears > 30 && serviceYears < 42){
+            return 12;
+        }else if(serviceYears > 42 && serviceYears < 54){
+            return 14;
+        }else if(serviceYears > 54 && serviceYears < 66){
+            return 16;
+        }else if(serviceYears > 66 && serviceYears < 78){
+            return 18;
+        }else{
+            return 20;
+        }
+    };
+
+    // 有給休暇シートの繰越分,本年度を更新
+    updateCurrentYearPaidLeaveSheet = (balancePaidLeave,paidLeaveCurrentYear,employeeName,year) => {
+        // 繰越分
+        this.sheet.getRange(6, 8).setValue(balancePaidLeave);
+        // 本年度
+        this.sheet.getRange(6, 10).setValue(paidLeaveCurrentYear);
+        // タイトル修正
+        this.sheet.getRange(2,2).setValue(year + "年度 有給休暇管理表");
+        // 名前修正
+        this.sheet.getRange(6,5).setValue(employeeName);
+    };
 }
