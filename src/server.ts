@@ -121,7 +121,7 @@ function doPost(e) {
         handler.gmailHandler.sendMail(employeeData.mail_address,Const.Gmail.SUBJECT,body.plain,body.html);
 
         // 承認者に送る
-        //handler.gmailHandler.sendMail(approveData.mail_address,Const.Gmail.SUBJECT,body.plain,body.html);
+        handler.gmailHandler.sendMail(approveData.mail_address,Const.Gmail.SUBJECT,body.plain,body.html);
 
         output.setContent(JSON.stringify({
             type: params.type,
