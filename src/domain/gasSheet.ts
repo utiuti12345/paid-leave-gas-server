@@ -4,7 +4,7 @@ class GasSheet {
     data: {}[];
     constructor(sheet) {
         this.sheet = sheet;
-        const rawColumns: any[] = sheet
+        const rawColumns: any[] = this.sheet
             .getRange(1, 1, 1, sheet.getLastColumn())
             .getValues()[0];
         const columns: { columnNum: number; name: string }[] = [];

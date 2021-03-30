@@ -9,7 +9,7 @@ function doGet(e) {
     let sheetName;
     const SHEETS = SpreadsheetApp.openById(Const.Sheet.MST_SHEET_ID);
     let SHEET;
-    if (e.parameter == undefined) {
+    if (e === undefined || e.parameter == undefined) {
         sheetName = Const.Sheet.EMPLOYEE_LIST;
     } else if (e.parameter.sheet == Const.Sheet.EMPLOYEE_LIST) {
         sheetName = Const.Sheet.EMPLOYEE_LIST;
@@ -73,7 +73,7 @@ function doPost(e) {
         const g = new GmailHandler();
         let handler = new Handler(pls,g);
 
-        if(params.mode = Const.Mode.UPDATE_PAID_LEAVE_SHEET){
+        if(params.type === Const.Mode.UPDATE_PAID_LEAVE_SHEET){
             try{
                 const balancePaidLeave = handler.paidLeaveHandler.getBalancePaidLeave();
                 const paidLeaveCurrentYear = handler.paidLeaveHandler.getPaidLeaveCurrentYear(employeeData.joining_date);
